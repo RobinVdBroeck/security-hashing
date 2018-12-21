@@ -1,8 +1,11 @@
 import itertools
 import hashlib
+import os
 from time import time
 from typing import Set, Dict, Iterator, Callable
 from tqdm import tqdm
+
+debug = False
 
 
 def read_hashes(path: str) -> Iterator[str]:
@@ -50,7 +53,8 @@ def bruteforce_attack(hash_algorithm: Callable[[str], str], hashes: Set[str], al
                 hashed_password = hash_algorithm(password)
 
                 if hashes.__contains__(hashed_password):
-                    progress.write("Found password for hash {}".format(hashed_password))
+                    if debug:
+                        progress.write("Found password for hash {}".format(hashed_password))
                     found[hashed_password] = password
                     if len(hashes) == len(found):
                         return found
@@ -60,37 +64,23 @@ def bruteforce_attack(hash_algorithm: Callable[[str], str], hashes: Set[str], al
     return found
 
 
-def dictionary_attack(hash_algorithm: Callable[[str], str], hashes: Set[str], dictionary: Iterator[str],
-                      print_found=False) -> Dict[
+def dictionary_attack(hash_algorithm: Callable[[str], str], hashes: Set[str], dictionary: Iterator[str]) -> Dict[
     str, str]:
     found = dict()
 
     for word in tqdm(dictionary):
         hashed_word = hash_algorithm(word)
         if hashes.__contains__(hashed_word):
-            if print_found:
+            if debug:
                 tqdm.write("Found password for hash {}".format(hashed_word))
             found[hashed_word] = word
 
     return found
 
 
-if __name__ == "__main__":
-    hashes = set()
-
-    for read_hash in read_hashes("large-md5.txt"):
-        hashes.add(read_hash)
-
-    # lowercase_chars = "abcdefghijklmnopqrstuvwxyz"
-    # uppercase_chars = lowercase_chars.upper()
-    # numbers = "1234567890"
-    # special_chars = "!@#.,$?"
-    # all_chars = lowercase_chars + uppercase_chars + numbers + special_chars
-
-    # result = bruteforce(md5, hashes, all_chars, min_size=5, max_size=5)
-
+def time_and_print(hashes: Set[str], function: Callable[[], Dict[str, str]]):
     timer_start = time()
-    result = dictionary_attack(md5, hashes, read_dict("dict.txt"))
+    result = function()
     timer_end = time()
     timer = timer_end - timer_start
 
@@ -103,3 +93,32 @@ if __name__ == "__main__":
     print("Percentage: {}%".format((amount_found / amount_total) * 100))
     print("Time: {} seconds".format(timer))
     print("Found per second: {}".format(amount_found / timer))
+
+
+if __name__ == "__main__":
+    def bruteforce_1():
+        lowercase_chars = "abcdefghijklmnopqrstuvwxyz"
+        uppercase_chars = lowercase_chars.upper()
+        numbers = "1234567890"
+        special_chars = "!@#.,$?"
+        all_chars = lowercase_chars + uppercase_chars + numbers + special_chars
+
+        return bruteforce_attack(md5, hashes, all_chars, min_size=1, max_size=4)
+
+    def dict_1():
+        return dictionary_attack(md5, hashes, read_dict("dict.txt"))
+
+    os.system("tput reset")
+
+    print("Started reading hashes")
+    hashes = set()
+    for read_hash in read_hashes("large-md5.txt"):
+        hashes.add(read_hash)
+
+    input("Read all hashes, press enter to continue...")
+    os.system("tput reset")
+    time_and_print(hashes, bruteforce_1)
+
+    input("Press enter to continue...")
+    os.system("tput reset")
+    time_and_print(hashes, dict_1)
