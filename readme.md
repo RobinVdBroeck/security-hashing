@@ -70,7 +70,7 @@ Dictionary used: 1.000.000 most used passwords from https://github.com/danielmie
   longer than the universe exists. But bruteforcing is still an complete algorithm.
 
 - Dictionary attack is very fast if you have a common password like "password". The algorithm is O(n) where n is the
-  amount of passwords. However, this is not complete. Your password will not be found if it's not in the dictionary the attacker
+  amount of passwords in the dictionary. However, this is not complete. Your password will not be found if it's not in the dictionary the attacker
   uses
 
 - Use a good algorithm that takes long to counter bruteforce attacks. The slower the algorithm, the better.
